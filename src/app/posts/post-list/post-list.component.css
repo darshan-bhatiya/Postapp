@@ -1,0 +1,12 @@
+:host{
+    margin-top: 2rem;
+    display : block;
+}
+
+mat-spinner{
+    margin: auto;
+}
+
+mat-expansion-panel{
+    margin-bottom: 1rem;
+}
