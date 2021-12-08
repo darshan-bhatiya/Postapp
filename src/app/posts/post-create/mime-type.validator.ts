@@ -1,5 +1,5 @@
 import { AbstractControl } from "@angular/forms";
-import { Observable, Observer, of } from "rxjs";
+import { Observable, Observer, of } from "rxjs";   //"of" will create and return observable instantly
 
 export const mimeType = (control: AbstractControl
     ): Promise<any> | Observable<any> => {  // "[]" is used to define it has argument with String type and could have anypaired name
