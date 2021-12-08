@@ -1,7 +1,9 @@
-import { Component ,OnInit} from "@angular/core";
+import { Component ,OnDestroy,OnInit} from "@angular/core";
 // import { EventEmitter, Output, ViewChild} from "@angular/core";
 import { FormControl, FormGroup, Validators} from "@angular/forms";
 import { ActivatedRoute, ParamMap } from "@angular/router";
+import { Subscription } from "rxjs";
+import { AuthService } from "src/app/auth/auth.service";
 import { PostsService } from "../post.service";
 import { mimeType } from "./mime-type.validator";
 // import { from } from "rxjs";
@@ -13,10 +15,11 @@ import { mimeType } from "./mime-type.validator";
     styleUrls: ['./post-create.component.css'],
 })
 
-export class PostCreatCompont implements OnInit{
-    post!: { id?: String| undefined; title?: String | undefined; content?: String | undefined; };
+export class PostCreatCompont implements OnInit,OnDestroy{
+    post!: { id: String|Blob; title: String; content: String; imagePath : String; creator : String};
     private mode = 'create';
-    private postId!: String | null;
+    private postId!: string | null;
+    private authStatusSub!: Subscription;
 
     isLoading = false;
     form!: FormGroup;
@@ -24,9 +27,18 @@ export class PostCreatCompont implements OnInit{
     imagePreview!: String;
     // @Output() postCreated = new EventEmitter<Post>();
 
-    constructor(public postsService :PostsService, public route: ActivatedRoute){}
+    constructor(public postsService :PostsService,
+        public route: ActivatedRoute,
+        private authService: AuthService){}
+   
     ngOnInit(): void {
-      this.form = new FormGroup({
+        this.authStatusSub = this.authService
+        .getAuthStatusListener()
+        .subscribe(authStatus => {
+                this.isLoading = false;
+            }
+        );
+        this.form = new FormGroup({
         title : new FormControl(null,{
             validators : [Validators.required, Validators.minLength(3)]
         }),
@@ -45,15 +57,25 @@ export class PostCreatCompont implements OnInit{
                 this.isLoading = true;
                 this.postsService.getPost(this.postId).subscribe(postData => {
                     this.isLoading = false;
-                    this.post = {id: postData._id, title: postData.title, content: postData.content};
+                    this.post = {
+                        id: postData._id,
+                        title: postData.title,
+                        content: postData.content,
+                        imagePath : postData.imagePath,
+                        creator : postData.creator
+                    };
+                    this.form.setValue({
+                        title : this.post.title,
+                        content : this.post.content,
+                        image : this.post.imagePath
+                    });
+                    console.log("mesg form editpost in createComponent",this.post);               
                 });
-                this.form.setValue({
-                    title : this.post.title,
-                    content : this.post.content
-                });
+
             }else{
                 this.mode = 'create';
                 this.postId = null;
+                console.log("mesg form CREATE in createComponent");
             }
       });  
     }
@@ -70,7 +92,7 @@ export class PostCreatCompont implements OnInit{
         // debugger;
         const reader = new FileReader();
         reader.onload = () =>{
-            this.imagePreview = reader.result as  String;
+            this.imagePreview = reader.result as String;
         };
         reader.readAsDataURL(file);
     }
@@ -87,14 +109,22 @@ export class PostCreatCompont implements OnInit{
         
         this.isLoading = true;
         if(this.mode == 'create'){
+            console.log(this.form.value.image);  // testing
             this.postsService.addPost(
                 this.form.value.title,
-                this.form.value.conten,
-                this.form.value.image
-                );
+                this.form.value.content,
+                this.form.value.image);
         }else{
-            this.postsService.updatePost(this.postId,this.form.value.title, this.form.value.content);
+            this.postsService.updatePost(this.postId!,this.form.value.title, this.form.value.content,this.form.value.image);
         }
+        debugger
         this.form.reset();
+        
+        // console.log("",this.form);
+        // this.isLoading = false;
+    }
+
+    ngOnDestroy(): void {
+        this.authStatusSub.unsubscribe();
     }
 }
