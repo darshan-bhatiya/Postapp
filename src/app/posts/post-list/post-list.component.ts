@@ -4,6 +4,7 @@ import { Post } from "../post.model"
 import { PostsService } from "../post.service";
 import { Subscription } from "rxjs";
 import { AuthService } from "src/app/auth/auth.service";
+import { SocketService } from "../socket.service";
 
 @Component({
     selector : 'app-post-list',
@@ -26,7 +27,7 @@ export class PostListComponent implements OnInit,OnDestroy{
     pageSizeOptions=[1,2,5,10];
     userIsAuthenticated = false;
 
-    constructor(public postsService: PostsService, private authService: AuthService){}
+    constructor(public postsService: PostsService, private authService: AuthService, private socketService: SocketService){}
 
     ngOnInit(){
         this.isLoading = true;
@@ -44,6 +45,13 @@ export class PostListComponent implements OnInit,OnDestroy{
             .subscribe(isAuthenticated => {
                 this.userIsAuthenticated = isAuthenticated;
                 this.userId = this.authService.getUserId(); 
+            });
+
+            //OnDataModifie socket changes
+            this.socketService.OnModifiedPost()
+            .subscribe((data:any) => {
+                    this.posts.push(data.post._doc);
+                    this.totalPosts++;
             });
     }
 

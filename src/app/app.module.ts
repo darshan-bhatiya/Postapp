@@ -11,6 +11,16 @@ import { ErrorComponent } from "./error/error.component";
 import { AngularMaterialModule } from './angular-material.module';
 import { PostsModule } from './posts/posts.module';
 
+import { SocketIoModule, SocketIoConfig } from 'ngx-socket-io';
+import { environment } from 'src/environments/environment';
+
+const config: SocketIoConfig = {
+	url: environment.socketUrl, // socket server url;
+	options: {
+		transports: ['websocket']
+	}
+}
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -23,7 +33,8 @@ import { PostsModule } from './posts/posts.module';
     BrowserAnimationsModule,
     HttpClientModule,
     AngularMaterialModule,
-    PostsModule
+    PostsModule,
+    SocketIoModule.forRoot(config)
   ],
   providers: [
     {provide: HTTP_INTERCEPTORS,useClass: AuthInterceptor, multi: true},

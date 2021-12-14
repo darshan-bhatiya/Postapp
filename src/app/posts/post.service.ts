@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 
 import { Post } from './post.model';
 import { environment } from '../../environments/environment';
+import { SocketService } from './socket.service';
 
 const BACKEND_URL = environment.apiUrl + '/posts/';
 
@@ -14,7 +15,7 @@ export class PostsService {
   private posts: Post[] = [];
   private postsUpdated = new Subject<{posts: Post[]; postCount: number}>(); //creating observable using rxjs
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router, private socketService: SocketService) {}
 
   getPosts(postPerPage: number, currentPage: number) {
     const queryParams = `?pagesize=${postPerPage}&page=${currentPage}`;
@@ -47,7 +48,18 @@ export class PostsService {
             posts: [...this.posts],
             postCount: transformedPostData.maxPosts
         });
-      });
+
+      // socket metho on getPost
+      // this.socketService.OncreatePost()
+      //   .subscribe((addedPost:any) => {
+      //       this.posts.push(addedPost.post._doc); 
+      //       this.postsUpdated.next({
+      //         posts: [...this.posts],
+      //         postCount:this.posts.length
+      //       });  
+      //     });
+
+    });
   }
 
   getPost(id: String | null) {
@@ -76,6 +88,10 @@ export class PostsService {
         postData
       )
       .subscribe((responseData) => {
+        console.log(responseData);
+        this.socketService.createPost({
+          ...responseData
+        });
         // const post: Post = {
         //   id: responseData.post.id,
         //   title: title,

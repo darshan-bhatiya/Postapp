@@ -9,6 +9,15 @@ const userRouter = require("./router/user")
 
 const app = express();
 
+// require socket.io
+const io = require('socket.io')({
+    cors: {
+        origin: "*"
+      }
+}); //<------
+require('./socket')(io)            //<------ 
+
+
 mongoose
     .connect("mongodb+srv://darshan1998:"
         + process.env.MONGO_ATLAS_PW +
@@ -45,4 +54,4 @@ app.use((req, res, next) => {
 app.use("/api/posts",postsRoutes);
 app.use("/api/user",userRouter);
 
-module.exports = app;
+module.exports = { app, io };
